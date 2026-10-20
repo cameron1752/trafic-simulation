@@ -1,6 +1,7 @@
 package com.biy.social.traffic_sim.service;
 
 import com.biy.social.traffic_sim.config.MDCFilter;
+import com.biy.social.traffic_sim.model.Feed;
 import com.biy.social.traffic_sim.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -32,6 +33,23 @@ public class APIService {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(new ParameterizedTypeReference<List<User>>() {});
+        } catch (RestClientResponseException e) {
+            log.error("API call failed: status={}, body={}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw e;                                          // or map to your own exception
+        }
+    }
+
+    public Feed getFeed(long userId, double lat, double lon){
+        try {
+            return restClient.get()
+                    .uri("/feed/" + userId)
+                    .header("traceId", MDC.get("traceId"))
+                    .header("lat", String.valueOf(lat))
+                    .header("long", String.valueOf(lon))
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(Feed.class);
         } catch (RestClientResponseException e) {
             log.error("API call failed: status={}, body={}",
                     e.getStatusCode(), e.getResponseBodyAsString());

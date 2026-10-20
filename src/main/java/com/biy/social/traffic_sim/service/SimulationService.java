@@ -1,6 +1,7 @@
 package com.biy.social.traffic_sim.service;
 
 import com.biy.social.traffic_sim.exception.SimulationException;
+import com.biy.social.traffic_sim.model.Feed;
 import com.biy.social.traffic_sim.model.Simulation;
 import com.biy.social.traffic_sim.model.User;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class SimulationService {
     Simulation simulation;
+    private final static double lat = 39.9526;
+    private final static double lon = -75.1652;
 
     @Autowired
     APIService apiService;
@@ -69,11 +72,17 @@ public class SimulationService {
         log.info("Simulating user: {}", user);
         // fetch feed for user
         try {
+            log.info("Fetching feed for user: {}", user.getUser_id());
+            Feed feed = apiService.getFeed(user.getUser_id(), lat, lon);
+            log.info("feed length: {}", feed.getFeedObjects().size());
+
+            // for each feed object ->
+            // random selection of interaction path on each video
+
             Thread.sleep(10000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        // random selection of interaction path on each video
         log.info("Simulation Completed for user: {}", user);
     }
 
