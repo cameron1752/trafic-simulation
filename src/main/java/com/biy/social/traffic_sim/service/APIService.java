@@ -1,8 +1,8 @@
 package com.biy.social.traffic_sim.service;
 
-import com.biy.social.traffic_sim.config.MDCFilter;
 import com.biy.social.traffic_sim.model.Feed;
 import com.biy.social.traffic_sim.model.User;
+import com.biy.social.traffic_sim.model.VideoInteraction;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.ParameterizedTypeReference;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -50,6 +49,22 @@ public class APIService {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(Feed.class);
+        } catch (RestClientResponseException e) {
+            log.error("API call failed: status={}, body={}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw e;                                          // or map to your own exception
+        }
+    }
+
+    public void sendInteraction(VideoInteraction interaction){
+        try {
+            restClient.post()
+                    .uri("/interactions")
+                    .header("traceId", MDC.get("traceId"))
+                    .body(interaction)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toBodilessEntity();
         } catch (RestClientResponseException e) {
             log.error("API call failed: status={}, body={}",
                     e.getStatusCode(), e.getResponseBodyAsString());

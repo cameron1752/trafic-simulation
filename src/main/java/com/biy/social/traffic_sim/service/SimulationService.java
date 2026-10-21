@@ -1,13 +1,12 @@
 package com.biy.social.traffic_sim.service;
 
 import com.biy.social.traffic_sim.exception.SimulationException;
-import com.biy.social.traffic_sim.model.Feed;
-import com.biy.social.traffic_sim.model.Simulation;
-import com.biy.social.traffic_sim.model.User;
+import com.biy.social.traffic_sim.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +22,9 @@ public class SimulationService {
 
     @Autowired
     APIService apiService;
+
+    @Autowired
+    InteractionService interactionService;
 
     public Simulation startSimulation(Simulation simulation){
 
@@ -77,6 +79,11 @@ public class SimulationService {
             log.info("feed length: {}", feed.getFeedObjects().size());
 
             // for each feed object ->
+            for (FeedObject object : feed.getFeedObjects()){
+                List<VideoInteractionEventType> interactions = interactionService.getRandomPath();
+                log.info("Video [{}] has interactions [{}]", object.getVideo().getId(), interactions);
+                performInteraction(user, object, interactions);
+            }
             // random selection of interaction path on each video
 
             Thread.sleep(10000);
@@ -84,6 +91,37 @@ public class SimulationService {
             throw new RuntimeException(e);
         }
         log.info("Simulation Completed for user: {}", user);
+    }
+
+    private void performInteraction(User user, FeedObject object, List<VideoInteractionEventType> interactions) {
+        Video video = object.getVideo();
+
+        for (VideoInteractionEventType interaction : interactions){
+            // call the API for this interaction & video w/ random time
+            long sleep = (long) (Math.random() * 1000);
+            log.info("Sending [{}] interaction for user [{}]", interaction, user.getUser_id());
+
+            VideoInteraction interactionEvent = new VideoInteraction();
+
+            interactionEvent.setUserId(user.getUser_id());
+            interactionEvent.setVideoId(video.getId());
+            interactionEvent.setEventType(interaction);
+            interactionEvent.setWatchDuration(null);
+            interactionEvent.setVideoDuration(60L);
+            interactionEvent.setCreatedAt(LocalDateTime.now());
+            interactionEvent.setLatitude(39.976755);
+            interactionEvent.setLongitude(-75.190711);
+
+            apiService.sendInteraction(interactionEvent);
+
+            log.info("[{}] interaction [{}] sleeping [{}]", video.getId(), interaction, sleep);
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     public Simulation getCurrentSimulation(){
