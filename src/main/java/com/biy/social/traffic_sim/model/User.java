@@ -17,5 +17,6 @@ public class User {
     private String name;
     private String avatar_url;
     private LocalDateTime created_at;
-
+    private Double latitude;
+    private Double longitude;
 }

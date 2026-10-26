@@ -6,9 +6,9 @@ import java.util.UUID;
 
 @Data
 public class Simulation {
-    UUID simulationId;
-    int users;
-    long duration;
+    private UUID simulationId;
+    private int users;
+    private long duration;
     private volatile Status status = Status.NEW;
 
     public enum Status { NEW, RUNNING, COMPLETED, FAILED }

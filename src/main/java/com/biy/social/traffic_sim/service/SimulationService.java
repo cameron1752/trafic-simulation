@@ -17,9 +17,6 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class SimulationService {
     Simulation simulation;
-    private final static double lat = 39.9526;
-    private final static double lon = -75.1652;
-
     @Autowired
     APIService apiService;
 
@@ -72,19 +69,27 @@ public class SimulationService {
 
     public void simulateUser(User user){
         log.info("Simulating user: {}", user);
+        double lat = user.getLatitude();
+        double lon = user.getLongitude();
+
         // fetch feed for user
         try {
             log.info("Fetching feed for user: {}", user.getUser_id());
             Feed feed = apiService.getFeed(user.getUser_id(), lat, lon);
             log.info("feed length: {}", feed.getFeedObjects().size());
 
-            // for each feed object ->
-            for (FeedObject object : feed.getFeedObjects()){
-                List<VideoInteractionEventType> interactions = interactionService.getRandomPath();
-                log.info("Video [{}] has interactions [{}]", object.getVideo().getId(), interactions);
-                performInteraction(user, object, interactions);
+            // until there isn't a feed left
+            while (feed.getCount() > 0){
+                // for each feed object ->
+                for (FeedObject object : feed.getFeedObjects()){
+                    List<VideoInteractionEventType> interactions = interactionService.getRandomPath();
+                    log.info("Video [{}] has interactions [{}]", object.getVideo().getId(), interactions);
+                    // random selection of interaction path on each video
+                    performInteraction(user, object, interactions);
+                }
+                log.info("Fetching feed for user: {}", user.getUser_id());
+                feed = apiService.getFeed(user.getUser_id(), lat, lon);
             }
-            // random selection of interaction path on each video
 
             Thread.sleep(10000);
         } catch (InterruptedException e) {
